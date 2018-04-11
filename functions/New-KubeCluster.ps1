@@ -16,6 +16,7 @@ function New-KubeCluster {
     [String]$EtcdVersion = "3.2.18"
   )
   try {
+    Get-Tool -EtcdVersion $EtcdVersion
     $baseimage = Get-BaseImage -BaseImageUrl $BaseImageUrl -VmStoragePath $VmStoragePath -HyperVHost $HyperVHost
     $basevhdx = Convert-CloudImg -CloudImgPath $baseimage -HyperVHost $HyperVHost
 
@@ -52,8 +53,8 @@ function New-KubeCluster {
     return $kubemasters
   }
   catch {
-    $message = $_.Exception.Message
-    $message += $_.InvocationInfo | Format-List *
-    throw $message
+    Write-Information "An error occured in   : $($_.InvocationInfo.ScriptName)" 
+    Write-Information "The error was at line : $($_.InvocationInfo.ScriptLineNumber)"
+    throw $_.Exception.Message
   }
 }

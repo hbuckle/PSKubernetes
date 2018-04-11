@@ -28,93 +28,47 @@ Class KubeMaster : KubeNode {
   static [Hashtable]$ClusterMembers = @{}
 
   [String] UserData() {
-    return @"
-#cloud-config
-bootcmd:
-  - hostname $($this.Hostname)
-write_files:
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdCACert)))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/pki/etcd/ca.pem
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdCAKey)))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/pki/etcd/ca-key.pem
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdClientCert)))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/pki/etcd/client.pem
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdClientKey)))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/pki/etcd/client-key.pem
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdServerCert)))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/pki/etcd/server.pem
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdServerKey)))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/pki/etcd/server-key.pem
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdPeerCert)))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/pki/etcd/peer.pem
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdPeerKey)))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/pki/etcd/peer-key.pem
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdService())))
-    encoding: b64
-    owner: root:root
-    path: /tmp/etcd.service
-    permissions: '0644'
-  - content: $([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.KubeAdm())))
-    encoding: b64
-    owner: root:root
-    path: /etc/kubernetes/kubeadm.yaml
-    permissions: '0644'
-runcmd:
-  - apt-get update
-  - apt-get install -y linux-virtual-lts-xenial
-  - apt-get install -y "linux-cloud-tools-`$(uname -r)"
-  - apt-get install -y docker.io
-  - apt-get install -y apt-transport-https
-  - curl -sSL https://github.com/coreos/etcd/releases/download/v3.2.18/etcd-v3.2.18-linux-amd64.tar.gz | tar -xzv --strip-components=1 -C /usr/local/bin/
-  - rm -rf etcd-v3.2.18-linux-amd64*
-  - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-  - cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
-  - deb http://apt.kubernetes.io/ kubernetes-xenial main
-  - EOF
-  - apt-get update
-  - apt-get install -y kubelet kubeadm kubectl
-  - sed -i '0,/ExecStart=/s/ExecStart=/Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=cgroupfs"\n&/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-  - mkdir /var/lib/etcd
-  - mv /tmp/etcd.service /etc/systemd/system/
-  - systemctl daemon-reload
-  - systemctl enable etcd
-  - sysctl net.bridge.bridge-nf-call-iptables=1
-users:
-  - name: $($this.SshUser)
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: users, admin
-    lock_passwd: true
-    ssh-authorized-keys:
-      - $($this.SshPublicKey)
-power_state:
-  mode: reboot
-  timeout: 30
-  condition: True
-"@ -replace "`r`n", "`n"
+    $WriteFiles = [ordered]@{
+      "/etc/kubernetes/pki/etcd/ca.pem"         = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdCACert))
+      "/etc/kubernetes/pki/etcd/ca-key.pem"     = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdCAKey))
+      "/etc/kubernetes/pki/etcd/client.pem"     = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdClientCert))
+      "/etc/kubernetes/pki/etcd/client-key.pem" = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdClientKey))
+      "/etc/kubernetes/pki/etcd/server.pem"     = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdServerCert))
+      "/etc/kubernetes/pki/etcd/server-key.pem" = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdServerKey))
+      "/etc/kubernetes/pki/etcd/peer.pem"       = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdPeerCert))
+      "/etc/kubernetes/pki/etcd/peer-key.pem"   = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdPeerKey))
+      "/tmp/etcd.service"                       = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdService()))
+      "/etc/kubernetes/kubeadm.yaml"            = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.KubeAdm()))
+    }
+    $RunCmd = @(
+      "apt-get update",
+      "apt-get install -y linux-virtual-lts-xenial",
+      "apt-get install -y `"linux-cloud-tools-`$(uname -r)`"",
+      "apt-get install -y docker.io",
+      "apt-get install -y apt-transport-https",
+      "curl -sSL https://github.com/coreos/etcd/releases/download/v3.2.18/etcd-v3.2.18-linux-amd64.tar.gz | tar -xzv --strip-components=1 -C /usr/local/bin/",
+      "rm -rf etcd-v3.2.18-linux-amd64*",
+      "curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -",
+      "cat <<EOF >/etc/apt/sources.list.d/kubernetes.list",
+      "deb http://apt.kubernetes.io/ kubernetes-xenial main",
+      "EOF",
+      "apt-get update",
+      "apt-get install -y kubelet kubeadm kubectl",
+      "sed -i '0,/ExecStart=/s/ExecStart=/Environment=`"KUBELET_EXTRA_ARGS=--cgroup-driver=cgroupfs`"\n&/' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf",
+      "mkdir /var/lib/etcd",
+      "mv /tmp/etcd.service /etc/systemd/system/",
+      "systemctl daemon-reload",
+      "systemctl enable etcd",
+      "sysctl net.bridge.bridge-nf-call-iptables=1"
+    )
+    $params = @{
+      "BootCmd"    = @("hostname $($this.Hostname)")
+      "WriteFiles" = $WriteFiles
+      "RunCmd"     = $RunCmd
+      "Users"      = [ordered]@{ $this.SshUser = $this.SshPublicKey }
+      "Reboot"     = $true
+    }
+    return Get-UserDataYaml @params
   }
 
   [String] KubeAdm() {
@@ -226,16 +180,20 @@ WantedBy=multi-user.target
       $this.EtcdServerCert = $cert.cert
       $this.EtcdServerKey = $cert.key
     }
+    else {
+      $this.WriteFile("server.pem", $this.EtcdServerCert)
+      $this.WriteFile("server-key.pem", $this.EtcdServerKey)
+    }
     if ([String]::IsNullOrEmpty($this.EtcdPeerCert)) {
       $servercsr = $this.WriteFile("peer.json", $configjson)
       $cert = New-CfsslCert -Directory $this.WorkingDir -ProfileName "peer" -CsrJson $servercsr
       $this.EtcdPeerCert = $cert.cert
       $this.EtcdPeerKey = $cert.key
     }
-    $this.WriteFile("server.pem", $this.EtcdServerCert)
-    $this.WriteFile("server-key.pem", $this.EtcdServerKey)
-    $this.WriteFile("peer.pem", $this.EtcdPeerCert)
-    $this.WriteFile("peer-key.pem", $this.EtcdPeerKey)
+    else {
+      $this.WriteFile("peer.pem", $this.EtcdPeerCert)
+      $this.WriteFile("peer-key.pem", $this.EtcdPeerKey)
+    }
   }
 
   [String] CreateIso($Oscdimg) {
