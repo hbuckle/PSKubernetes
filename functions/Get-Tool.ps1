@@ -13,6 +13,6 @@ function Get-Tool {
     $client = [System.Net.WebClient]::new()
     $client.DownloadFile($etcdurl, "$tools\etcd-v${EtcdVersion}-windows-amd64.zip")
     Expand-Archive -Path "$tools\etcd-v${EtcdVersion}-windows-amd64.zip" -DestinationPath $tools
-    $Script:etcdctl = "$tools\etcd-v${EtcdVersion}-windows-amd64\etcdctl.exe"
   }
+  $Script:etcdctl = "$tools\etcd-v${EtcdVersion}-windows-amd64\etcdctl.exe"
 }

@@ -29,16 +29,16 @@ Class KubeMaster : KubeNode {
 
   [String] UserData() {
     $WriteFiles = [ordered]@{
-      "/etc/kubernetes/pki/etcd/ca.pem"         = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdCACert))
-      "/etc/kubernetes/pki/etcd/ca-key.pem"     = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdCAKey))
-      "/etc/kubernetes/pki/etcd/client.pem"     = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdClientCert))
-      "/etc/kubernetes/pki/etcd/client-key.pem" = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this::EtcdClientKey))
-      "/etc/kubernetes/pki/etcd/server.pem"     = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdServerCert))
-      "/etc/kubernetes/pki/etcd/server-key.pem" = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdServerKey))
-      "/etc/kubernetes/pki/etcd/peer.pem"       = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdPeerCert))
-      "/etc/kubernetes/pki/etcd/peer-key.pem"   = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdPeerKey))
-      "/tmp/etcd.service"                       = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.EtcdService()))
-      "/etc/kubernetes/kubeadm.yaml"            = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($this.KubeAdm()))
+      "/etc/kubernetes/pki/etcd/ca.pem"         = $this::EtcdCACert
+      "/etc/kubernetes/pki/etcd/ca-key.pem"     = $this::EtcdCAKey
+      "/etc/kubernetes/pki/etcd/client.pem"     = $this::EtcdClientCert
+      "/etc/kubernetes/pki/etcd/client-key.pem" = $this::EtcdClientKey
+      "/etc/kubernetes/pki/etcd/server.pem"     = $this.EtcdServerCert
+      "/etc/kubernetes/pki/etcd/server-key.pem" = $this.EtcdServerKey
+      "/etc/kubernetes/pki/etcd/peer.pem"       = $this.EtcdPeerCert
+      "/etc/kubernetes/pki/etcd/peer-key.pem"   = $this.EtcdPeerKey
+      "/tmp/etcd.service"                       = $this.EtcdService()
+      "/etc/kubernetes/kubeadm.yaml"            = $this.KubeAdm()
     }
     $RunCmd = @(
       "apt-get update",
