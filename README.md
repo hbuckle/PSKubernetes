@@ -19,4 +19,3 @@ a user with admin permissions over the Hyper-V, DHCP and DNS servers.
 
 ### Tools
 
-* `oscdimg.exe` - 

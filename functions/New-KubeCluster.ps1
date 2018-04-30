@@ -38,7 +38,7 @@ function New-KubeCluster {
     foreach ($master in $kubemasters) {
       $folder = New-KubeVmFolder -VmStoragePath $VmStoragePath -VmName $master.Hostname -HyperVHost $HyperVHost
       $vhd = New-KubeVmVhd -VmFolderPath $folder -BaseImagePath $basevhdx -HyperVHost $HyperVHost
-      $localiso = $master.CreateIso($Script:oscdimg)
+      $localiso = $master.CreateIso()
       $iso = Copy-KubeIso -VmFolderPath $folder -Iso $localiso -HyperVHost $HyperVHost
       New-KubeVm -Name $master.Hostname -VmFolderPath $folder -SwitchName $HyperVSwitch -VhdPath $vhd -MacAddress $master.MacAddress -IsoPath $iso -HyperVHost $HyperVHost
       Start-VM -Name $master.Hostname -ComputerName $HyperVHost

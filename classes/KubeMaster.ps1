@@ -196,7 +196,7 @@ WantedBy=multi-user.target
     }
   }
 
-  [String] CreateIso($Oscdimg) {
+  [String] CreateIso() {
     $outpath = Join-Path $this.WorkingDir "iso"
     if (-not(Test-Path $outpath)) {
       $null = New-Item -Path $outpath -ItemType Directory
@@ -208,7 +208,7 @@ WantedBy=multi-user.target
     $this.WriteFile("iso\user-data", $this.UserData())
     $this.WriteFile("iso\network-config", $this.NetworkConfig())
     $iso = Join-Path $outpath "cidata.iso"
-    Start-ProcessWithOutput -FilePath $Oscdimg -Arguments "$outpath $iso -j2 -lcidata"
+    New-KubeIso -SourceFolder $outpath -OutPath $iso
     return $iso
   }
 }

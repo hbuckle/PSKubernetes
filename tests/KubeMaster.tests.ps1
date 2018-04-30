@@ -55,6 +55,13 @@ InModuleScope "PSKubernetes" {
           "TestDrive:\${guid}\peer-key.pem"   | Should -FileContentMatchExactly "key"
         }
       }
+      Describe "CreateIso" {
+        It "Creates cidata.iso" {
+          $kubemaster = [KubeMaster]::new("host", "domain", $TestDrive, "ip", "apiserver")
+          $iso = $kubemaster.CreateIso()
+          $iso | Should -Exist
+        }
+      }
     }
   }
 }
